@@ -28,11 +28,11 @@ def input_single_shape(input,samples):
     x=np.ndarray([samples-1,1,input.shape[1]])
     for i in range(1,samples):
         x[i-1,:,:] = input[i,:]
-    #print(x)
+    # print(x)
     return x
 def Input_combine_output(Input,output,sample):
     input = np.zeros([sample - 1, 1, 18])
-    #print(input.shape)
+    # print(input.shape)
     for j in range(0,sample-1):
         input[j,:,0:15]=Input[j,:,:]
     for i in range(1,sample-1):
@@ -111,23 +111,25 @@ def Organizing_Data(file,Height,Mass):
         # print("Final_y")
         # print(final_Y)
         for i in range(1, len(x), 2):
-            #print("Reshape Print")
+            # print("Reshape Print")
             X = np.vstack((x[i - 1, :], x[i, :]))
             Y = np.vstack((y[i - 1, :], y[i, :]))
             final_X[count] = X
             final_Y[count] = Y
             count = count + 1
-            #print(count)
+            # print(count)
         return final_X, final_Y
-    Input_Data = GRFdf[['Time', 'Fx1', 'Fy1', 'Fz1', 'COPx1', 'COPz1', 'Ty1', 'Fx2', 'Fy2', 'Fz2', 'COPx2', 'COPz2',
-                        'Ty2']]  # Input data dataframe
+    # Input_Data = GRFdf[['Fx1', 'Fy1', 'Fz1', 'COPx1', 'COPz1', 'Ty1', 'Fx2',
+    #                     'Fy2', 'Fz2', 'COPx2', 'COPz2', 'Ty2']]  # Input data dataframe
+    Input_Data = GRFdf[['Time','Fx1', 'Fy1', 'Fz1','COPx1','COPz1','Fx2',
+                        'Fy2', 'Fz2','COPx2','COPz2']]  # Input data dataframe
 
-    Input_Data['COPx1']=Input_Data['COPx1']/1000
-    # Input_Data['COPy1']=Input_Data['COPy1']/1000
-    Input_Data['COPz1']=Input_Data['COPz1']/1000
-    Input_Data['COPx2']=Input_Data['COPx2']/1000
-    # Input_Data['COPy2']=Input_Data['COPy2']/1000
-    Input_Data['COPz2']=Input_Data['COPz2']/1000
+    Input_Data.loc[:,'COPx1'] = Input_Data['COPx1']/1000
+    # # Input_Data['COPy1']=Input_Data['COPy1']/1000
+    Input_Data.loc[:,'COPz1'] = Input_Data['COPz1']/1000
+    Input_Data.loc[:,'COPx2'] = Input_Data['COPx2']/1000
+    # # Input_Data['COPy2']=Input_Data['COPy2']/1000
+    Input_Data.loc[:,'COPz2'] = Input_Data['COPz2']/1000
     # height_array=np.full((len(Input_Data),1), float(input("Height of Subject :")))
     # mass_array=np.full((len(Input_Data),1),  float(input("Weight of Subject: ")))
     height_array = np.full((len(Input_Data), 1), float(Height))
@@ -149,7 +151,7 @@ def Organizing_Data(file,Height,Mass):
     # print(Input_Data)
     # wait=input("Press Enter to Continue")
     Input_Data_Array=Input_Data.to_numpy(dtype=np.float64)
-    x, y = Create_Sequence(Input_Data_Array, int(15))
+    x, y = Create_Sequence(Input_Data_Array, int(16))
     np.printoptions(precision=3, suppress=True)
     # print(x.shape)
     # print(x)
@@ -174,11 +176,11 @@ def Organizing_Data(file,Height,Mass):
             nan_z[counter]=int(k)
             counter=counter+1
     nanz=nan_z[:counter]
-    #print(nanz)
+    # print(nanz)
     y_reshape=np.delete(y_reshape,nanz,axis=0)
     x_reshape=np.delete(x_reshape,nanz,axis=0)
-    #print(x_reshape.shape)
-    #print(y_reshape.shape)
+    # print(x_reshape.shape)
+    # print(y_reshape.shape)
     trial_Y=Output_Data.to_numpy(dtype=np.float64).reshape(3000,1,3)
     trial_Y=trial_Y[:-1,:,:]
     return x_reshape, y_reshape,trial_Y
