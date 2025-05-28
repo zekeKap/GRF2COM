@@ -13,16 +13,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
+import Data_Adjustment
+
 
 def absError(y_true, y_pred):
     f_y_pred = keras.ops.numpy.ravel(y_pred)
     f_y_true = keras.ops.numpy.ravel(y_true)
     e = tf.math.reduce_sum(f_y_pred - f_y_true)
-    return abs(e)
+    return abs(e)con
 
-unit = int(128)
+unit = int(256)
 batch = int(1000)
-reps=int(5)
+reps=int(2)
 count=0
 DataSet = os.listdir("/scratch/kaplan.ez/WalkingDataSet")
 Path_Dataset = "/scratch/kaplan.ez/WalkingDataSet/"
@@ -35,7 +37,7 @@ for i in range(len(DataSet)):
     Subject.append(int(subject))
 print(Subject)
 model=Sequential()
-model.add(LSTM(unit,activation='tanh',return_sequences=False,input_shape=(1,9),dropout=0.05))
+model.add(SimpleRNN(unit,activation='tanh',return_sequences=False,input_shape=(1,13),dropout=0.05))
 model.add(Dense(int(unit*2),activation='relu'))
 model.add(keras.layers.BatchNormalization())
 model.add(Dense(units=unit,activation='relu'))
@@ -49,6 +51,7 @@ Xtraining=[]
 Ytraining=[]
 training_order=np.linspace(0,len(DataSet)-1,len(DataSet))
 for k in range(len(DataSet)):
+  print(k/len(DataSet))
   for j in range(len(DatasetInfo) - 1):
     if Subject[k] == DatasetInfo["Subject"][j]:
       Height = float(DatasetInfo["Height"][j] / 100)
@@ -71,20 +74,15 @@ for rep in range(1,reps):
         percent=float((count/(len(Xtraining)*reps))*100)
         x_reshape=Xtraining[index]
         y_reshape=Ytraining[index]
-        scalerX = MinMaxScaler(feature_range=(-1, 1))
-        x = x_reshape.reshape(-1, x_reshape.shape[-1])
-        x = scalerX.fit_transform(x)
-        x = x.reshape(x_reshape.shape)
-        scalerY = MinMaxScaler(feature_range=(-1, 1))
-        y = y_reshape.reshape(-1, y_reshape.shape[-1])
-        y = scalerY.fit_transform(y)
-        y = y.reshape(y_reshape.shape)
-        y = y.reshape(y.shape[0], y.shape[-1])
+        x = Data_Adjustment.COP_adjustment(x_reshape)
+        x, y = Data_Adjustment.Data_Normalization(x, y_reshape)
+        x = Data_Adjustment.reshape(x)
+        y = Data_Adjustment.reshapeoutput(y_reshape, 5)
         model.reset_metrics()
-        model.fit(x, y, batch_size=batch, epochs=20, validation_split=0.05,shuffle=True)  # larger batch size the better it is
+        model.fit(x, y, batch_size=batch, epochs=50,shuffle=True)  # larger batch size the better it is
         print(percent)
     model.save('RNN_Model_Multi_Set.keras')
-capturePredictedValues = model(x,trainable=False)
+capturePredictedValues = model(x,training=False)
 # cogx=(capturePredictedValues*(y_max-y_min))+(y_min)
 plt.plot(capturePredictedValues[:, 0])
 plt.plot(y[:, 0])
